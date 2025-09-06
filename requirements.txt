@@ -1,3 +1,1 @@
-#https://www.rust-lang.org/tools/install
-rustypot
-numpy
+pyserial==3.5
