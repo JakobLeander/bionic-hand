@@ -59,7 +59,7 @@ def main():
     print("Bionic hand control started.")
     # TODO: Add initialization and control code
 
-    thumbs_up()
+    horns()
 
     # open_hand()
 
@@ -132,6 +132,18 @@ def no_no():
     move_index(0, 85, speed)
     time.sleep(sleep_time)
     move_index(-85, 0, speed)
+
+
+def horns():
+    """
+    Horns
+    """
+    speed = 30
+    move_index(-20, 60, speed)
+    move_middle(FINGER_MAX_R, FINGER_MIN_L, speed)
+    move_ring(-60, 20, speed)
+    time.sleep(0.5)
+    move_thumb(60, -60, speed)
 
 
 def victory():
