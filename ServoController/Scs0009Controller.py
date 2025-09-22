@@ -14,8 +14,9 @@ class Scs0009Controller:
     BAUDRATE = 1000000  # SCServo default baudrate : 1000000
     MIN_POSITION = 0
     MAX_POSITION = 1024  # SCS0009 has a range of 0-1024 (0-300 degrees)
-    MIN_DEGREE = -150
-    MAX_DEGREE = +150
+    CENTER_POSITION = 512
+    MIN_DEGREE = -85
+    MAX_DEGREE = +85
     MIN_SPEED = 1
     MAX_SPEED = 2048
 
@@ -114,7 +115,7 @@ class Scs0009Controller:
                 f"Servo error: {self.packetHandler.getRxPacketError(error)}"
             )
 
-    def move_angle(self, id: int, angle: int):
+    def move_angle(self, id: int, angle: int, center_pos: int = CENTER_POSITION):
         """
         Set the angle of the servo.
 
@@ -125,7 +126,9 @@ class Scs0009Controller:
         if angle < self.MIN_DEGREE or angle > self.MAX_DEGREE:
             raise ValueError(f"Angle must be between -150 and +150 degrees")
 
+        center_offset = center_pos - self.CENTER_POSITION
         position = int(((angle + 150) / 300) * (self.MAX_POSITION - self.MIN_POSITION))
+        position = center_offset + position
 
         comm_result, error = self.packetHandler.WritePosition(id, position)
         if comm_result != COMM_SUCCESS:
