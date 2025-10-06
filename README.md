@@ -3,6 +3,12 @@
 
 This repository contains the code and resources for building and controlling a bionic hand using Python and Arduino hardware.
 
+The hand itself is based on Amazing Hand from Pollen Robotics: https://github.com/pollen-robotics/AmazingHand
+
+The muscle sensor is from Sparkfun: https://learn.sparkfun.com/tutorials/myoware-muscle-sensor-kit
+
+It is an old version I had lying around. You will likely be able to find a newer version e.g. from Pimeroni: https://shop.pimoroni.com/products/myoware-2-0-muscle-sensor-1?variant=40537749487699 
+
 ## Features
 - Python-based servo control for SCS0009 serial bus servos
 - Arduino receiver and emitter code for hardware communication
