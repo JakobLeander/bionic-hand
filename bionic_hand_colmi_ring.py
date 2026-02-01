@@ -1,14 +1,18 @@
 # =============================================================================
-#  bionic-hand.py
-#  Controlling the bionic hand
+#  bionic_hand_colmi_ring.py
+#  Controlling the bionic hand with a colmi ring
 #  Copyright (c) 2025 Jakob Leander
 #  Licensed under the MIT License.
 # =============================================================================
 #!/usr/bin/env python
+from http import client
 import sys
 import time
 
 from ServoController.Scs0009Controller import Scs0009Controller
+import asyncio
+import keyboard
+from colmi_ring.colmi_client import ColmiClient
 
 # Find these values with fd.exe from feetech
 CENTER_DEFAULT = 511
@@ -50,24 +54,57 @@ DEVICENAME = "COM5"  # Set to correct port for your system
 
 controller = Scs0009Controller(DEVICENAME)
 
+RING_ADDRESS = "32:31:47:36:08:07"  # Replace with your Colmi Ring's Bluetooth address
 
-def main():
+
+async def main():
     """
     Main entry point for controlling the bionic hand.
     Add your initialization and control logic here.
     """
-    print("Bionic hand control started.")
-    # TODO: Add initialization and control code
+    print("Hold SPACE to stop")
 
-    horns()
+    open_hand()
+    client = ColmiClient(RING_ADDRESS)
 
-    # open_hand()
+    async with client:
+        await client.start_streaming()
 
-    while True:
-        open_hand()
-        time.sleep(2)
-        close_hand()
-        time.sleep(2)
+        while True:
+            x_abs = abs(client.accX)
+            if x_abs > 8192:
+                x_abs = 8192  # Clamp to max value
+
+            fist_closed_percent = x_abs / 81.92  # Scale to 0-100%
+            ring_controlled_hand(fist_closed_percent)
+
+            await asyncio.sleep(0.5)
+
+            if keyboard.is_pressed(" "):  # Check if space key is pressed
+                print("Space key pressed - stopping streaming")
+                await client.stop_streaming()
+                break
+
+
+def ring_controlled_hand(closed_percent):
+    print(f"Closing hand to {closed_percent:.2f}%")
+    speed = 50
+    move_index(
+        FINGER_MIN_R + (FINGER_MAX_R - FINGER_MIN_R) * closed_percent / 100,
+        FINGER_MAX_L - (FINGER_MAX_L - FINGER_MIN_L) * closed_percent / 100,
+        speed,
+    )
+    move_middle(
+        FINGER_MIN_R + (FINGER_MAX_R - FINGER_MIN_R) * closed_percent / 100,
+        FINGER_MAX_L - (FINGER_MAX_L - FINGER_MIN_L) * closed_percent / 100,
+        speed,
+    )
+    move_ring(
+        FINGER_MIN_R + (FINGER_MAX_R - FINGER_MIN_R) * closed_percent / 100,
+        FINGER_MAX_L - (FINGER_MAX_L - FINGER_MIN_L) * closed_percent / 100,
+        speed,
+    )
+    move_thumb(THUMB_MIN_R + 20, THUMB_MAX_L - 20, speed)
 
 
 def open_hand():
@@ -83,7 +120,7 @@ def open_hand():
 
 def close_hand():
     """
-    Open all fingers
+    Close all fingers
     """
     speed = 30
     move_index(FINGER_MAX_R, FINGER_MIN_L, speed)
@@ -91,127 +128,6 @@ def close_hand():
     move_ring(FINGER_MAX_R, FINGER_MIN_L, speed)
     time.sleep(0.5)
     move_thumb(20, -20, speed)
-
-
-def point_index():
-    """
-    Point with index finger
-    """
-    speed = 30
-    move_index(FINGER_MIN_R, FINGER_MAX_L, speed)
-    move_middle(FINGER_MAX_R, FINGER_MIN_L, speed)
-    move_ring(FINGER_MAX_R, FINGER_MIN_L, speed)
-    time.sleep(0.5)
-    move_thumb(60, -60, speed)
-
-
-def no_no():
-    """
-    No no with index finger
-    """
-    speed = 30
-    move_index(FINGER_MIN_R, FINGER_MAX_L, speed)
-    move_middle(FINGER_MAX_R, FINGER_MIN_L, speed)
-    move_ring(FINGER_MAX_R, FINGER_MIN_L, speed)
-    time.sleep(0.5)
-    move_thumb(60, -60, speed)
-    time.sleep(1)
-
-    speed = 50
-    sleep_time = 0.3
-    move_index(0, 85, speed)
-    time.sleep(sleep_time)
-    move_index(-85, 0, speed)
-    time.sleep(sleep_time)
-    move_index(0, 85, speed)
-    time.sleep(sleep_time)
-    move_index(-85, 0, speed)
-    time.sleep(sleep_time)
-    move_index(0, 85, speed)
-    time.sleep(sleep_time)
-    move_index(-85, 0, speed)
-
-
-def horns():
-    """
-    Horns
-    """
-    speed = 30
-    move_index(-20, 60, speed)
-    move_middle(FINGER_MAX_R, FINGER_MIN_L, speed)
-    move_ring(-60, 20, speed)
-    time.sleep(0.5)
-    move_thumb(60, -60, speed)
-
-
-def victory():
-    """
-    Victory sign with index and middle finger
-    """
-    speed = 30
-    move_index(0, 85, speed)
-    move_middle(-85, 0, speed)
-    move_ring(FINGER_MAX_R, FINGER_MIN_L, speed)
-    time.sleep(0.5)
-    move_thumb(60, -60, speed)
-
-
-def scissor():
-    """
-    Scissor in rock paper scissors. Use open and close for paper and rock
-    """
-    speed = 30
-    move_index(-30, 50, speed)
-    move_middle(-50, 30, speed)
-    move_ring(FINGER_MAX_R, FINGER_MIN_L, speed)
-    time.sleep(0.5)
-    move_thumb(60, -60, speed)
-
-
-def thumbs_up():
-    """
-    Thumbs up sign
-    """
-    speed = 30
-    move_thumb(THUMB_MIN_R, THUMB_MAX_L, speed)
-    time.sleep(0.5)
-    move_index(FINGER_MAX_R, FINGER_MIN_L, speed)
-    move_middle(FINGER_MAX_R, FINGER_MIN_L, speed)
-    move_ring(FINGER_MAX_R, FINGER_MIN_L, speed)
-
-
-def perfect():
-    """
-    Perfect sign
-    """
-    speed = 30
-    move_index(35, -35, speed)
-    move_middle(FINGER_MIN_R, FINGER_MAX_L, speed)
-    move_ring(FINGER_MIN_R, FINGER_MAX_L, speed)
-    move_thumb(15, -15, speed)
-
-
-def three():
-    """
-    Three
-    """
-    speed = 30
-    move_index(-30, 50, speed)
-    move_middle(-50, 30, speed)
-    move_ring(FINGER_MAX_R, FINGER_MIN_L, speed)
-    move_thumb(-40, -60, speed)
-
-
-def four():
-    """
-    Four
-    """
-    speed = 30
-    move_index(FINGER_MIN_R, FINGER_MAX_L, speed)
-    move_middle(FINGER_MIN_R, FINGER_MAX_L, speed)
-    move_ring(FINGER_MIN_R, FINGER_MAX_L, speed)
-    time.sleep(0.5)
-    move_thumb(-40, -60, speed)
 
 
 def move_index(angle_r, angle_l, speed):
@@ -287,4 +203,4 @@ def move_thumb(angle_r, angle_l, speed):
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
